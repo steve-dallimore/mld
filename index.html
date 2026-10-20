@@ -61,7 +61,7 @@ html,body{margin:0;background:var(--color-bg)}
 .mx th{position:sticky;top:0;background:var(--color-panel);text-align:right;font-weight:var(--cds-font-weight-medium);padding:var(--cds-pad-xs) var(--cds-pad-sm);border-bottom:1px solid var(--color-border-line);white-space:nowrap}
 .mx th button{font:inherit;background:none;border:0;color:inherit;cursor:pointer;padding:0}
 .mx td{text-align:right;padding:var(--cds-pad-xs) var(--cds-pad-sm);border-bottom:1px solid var(--color-border-line);white-space:nowrap}
-.mx th:nth-child(-n+3),.mx td:nth-child(-n+3){text-align:left}
+.mx th:nth-child(-n+2),.mx td:nth-child(-n+2),.mx th:nth-child(4),.mx td:nth-child(4){text-align:left}
 .mx tbody tr{cursor:pointer}
 .mx tbody tr:hover td{background:var(--cds-surface-popover)}
 .mx td .ib{display:inline-block;height:8px;border-radius:4px;background:var(--cds-chart-muted);margin-right:6px;vertical-align:0}
@@ -557,6 +557,7 @@ window.dash = (() => {
           <thead><tr>
             <th data-field="Name"><button data-sort="Name">Site</button></th>
             <th data-field="Market_Name2"><button data-sort="Market_Name2">Market</button></th>
+            <th data-field="PolygonArea" class="hide-n"><button data-sort="PolygonArea">Polygon area (sq ft)</button></th>
             <th data-field="Center_Type" class="hide-n"><button data-sort="Center_Type">Type</button></th>
             <th data-field="B02_TRAFFIC_VISITS"><button data-sort="B02_TRAFFIC_VISITS">Visits</button></th>
             <th data-field="B01_TRAFFIC_VISITOR" class="hide-n"><button data-sort="B01_TRAFFIC_VISITOR">Visitors</button></th>
@@ -624,7 +625,7 @@ dash.calc('sites', {
   description: 'One row per DSiteID, numbers parsed, center-type spellings tidied, and shares worked out from the counts.',
   inputs: ['mld'],
   fn: (mld) => {
-    const num = /^(%|[BCDEFXY]\d)/;
+    const num = /^(%|[BCDEFXY]\d|PolygonArea$)/;
     const seen = new Set(), out = [];
     for (const r of mld) {
       if (seen.has(r.DSiteID)) continue;
@@ -836,7 +837,7 @@ function drawTable(fs) {
   rows = rows.slice().sort((a, b) => { const va = a[sortK], vb = b[sortK]; const c = typeof va === 'string' ? va.localeCompare(vb) : (va ?? -Infinity) - (vb ?? -Infinity); return sortAsc ? c : -c; });
   document.querySelectorAll('#t th').forEach((th) => th.setAttribute('aria-sort', th.dataset.field === sortK ? (sortAsc ? 'ascending' : 'descending') : 'none'));
   const mx = d3.max(fs, (s) => s.B02_TRAFFIC_VISITS) || 1;
-  const cols = [['Name', (v) => v], ['Market_Name2', (v) => v], ['Center_Type', (v) => v, 'hide-n'], ['B02_TRAFFIC_VISITS', fmt, null, true], ['B01_TRAFFIC_VISITOR', fmt, 'hide-n'], ['B20_TRAFFIC_AVGFREQ', d3.format('.2f')], ['B24_TRAFFIC_MEDDWELL', (v) => d3.format('.0f')(v) + ' min'], ['repeat_share', pct1, 'hide-n'], ['tourist_share', pct1, 'hide-n'], ['E01_TA_Distance', d3.format('.1f'), 'hide-n'], ['X4004_INCOME_MHHI', usd0, 'hide-n']];
+  const cols = [['Name', (v) => v], ['Market_Name2', (v) => v], ['PolygonArea', (v) => fmt(Math.round(v)), 'hide-n'], ['Center_Type', (v) => v, 'hide-n'], ['B02_TRAFFIC_VISITS', fmt, null, true], ['B01_TRAFFIC_VISITOR', fmt, 'hide-n'], ['B20_TRAFFIC_AVGFREQ', d3.format('.2f')], ['B24_TRAFFIC_MEDDWELL', (v) => d3.format('.0f')(v) + ' min'], ['repeat_share', pct1, 'hide-n'], ['tourist_share', pct1, 'hide-n'], ['E01_TA_Distance', d3.format('.1f'), 'hide-n'], ['X4004_INCOME_MHHI', usd0, 'hide-n']];
   $('#t tbody').replaceChildren(...rows.map((s) => {
     const tr = document.createElement('tr'); tr.dataset.key = s.DSiteID;
     for (const [k, f, cls, bar] of cols) {
@@ -1075,7 +1076,6 @@ dash.onData(() => {
 });
 })();
 </script>
-<p class="foot">Source: Data is from Azira, Experian, or Popstats. Actuall mobile data last update early 2025.</p>
 </div>
 </body>
 </html>
